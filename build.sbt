@@ -1,5 +1,5 @@
 lazy val commonSettings = Seq(
-  organization := "com.itv",
+  organization := "com.github.afiore",
   version := "0.1.0-SNAPSHOT",
   scalaVersion := "2.12.3",
   libraryDependencies ++= Seq(
