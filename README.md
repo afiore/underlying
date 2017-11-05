@@ -24,7 +24,20 @@ implicit val idDecoder = Decoder.instance[Id](c => c.as[String].map(Id(_)))
 // docEncoder, docDecoder definitions ...
 ```
 
-## Automatic derivation
+## Usage
+
+You can install underlying by adding the following to your `build.sbt` file:
+
+```scala
+resolvers += Resolver.bintrayRepo("afiore","maven")
+
+libraryDependencies += Seq(
+  "com.github.afiore" %% "underlying-core" % "0.1.0",
+  "com.github.afiore" %% "underlying-core" % "0.1.0"
+)
+```
+
+### Automatic derivation
 
 Underlying provides a mechanism to get rid of some of this boilerplate:
 
@@ -60,7 +73,7 @@ scala> doc.asJson.as[Document]
 res7: io.circe.Decoder.Result[Document] = Right(Document(Id(xyz18a),Some doc))
 ```
 
-## Semi-automatic derivation
+### Semi-automatic derivation
 
 Automatic derivation works fine as long as all your newtypes behave as illustrated. 
 However, keep in mind that, because of scala [implicit resolution rules](https://docs.scala-lang.org/tutorials/FAQ/finding-implicits.html),

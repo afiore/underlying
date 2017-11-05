@@ -1,11 +1,14 @@
 lazy val commonSettings = Seq(
   organization := "com.github.afiore",
-  version := "0.1.0-SNAPSHOT",
+  version := "0.1.0",
   scalaVersion := "2.12.3",
+  crossScalaVersions := Seq("2.11.11","2.12.3"),
   libraryDependencies ++= Seq(
     "com.chuusai" %% "shapeless" % "2.3.2",
     "org.scalatest" %% "scalatest" % "3.0.4" % "test"
-  )
+  ),
+  licenses := Seq("MIT" -> url("https://opensource.org/licenses/MIT" )),
+  resolvers += Resolver.jcenterRepo
 )
 
 val circeVersion = "0.9.0-M2"
@@ -46,6 +49,4 @@ lazy val circe =
     )
     .dependsOn(core)
     .enablePlugins(TutPlugin)
-
-lazy val root = (project in file(".")).aggregate(core, circe)
 
