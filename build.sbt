@@ -21,7 +21,6 @@ lazy val circe =
       .settings(
         name := "underlying-circe",
         libraryDependencies ++= Seq(
-          "io.circe" %% "circe-core" % circeVersion,
-          "io.circe" %% "circe-generic" % circeVersion
+          "io.circe" %% "circe-core" % circeVersion
         ))
     .dependsOn(core)
