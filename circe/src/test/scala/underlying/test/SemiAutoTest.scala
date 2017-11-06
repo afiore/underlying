@@ -3,7 +3,6 @@ package underlying.test
 import io.circe.{Decoder, Encoder, Json}
 import org.scalactic.TypeCheckedTripleEquals
 import org.scalatest.{FreeSpec, Matchers}
-import underlying.circe.DerivedDecoder
 import underlying.circe.semiauto._
 
 class SemiAutoTest extends FreeSpec with Matchers with TypeCheckedTripleEquals {
@@ -19,6 +18,10 @@ class SemiAutoTest extends FreeSpec with Matchers with TypeCheckedTripleEquals {
   }
 
   case class IdDerive(value: Int)
+  object IdDerive {
+    implicit val enc: Encoder[IdDerive] = deriveUnderlyingEncoder[IdDerive]
+    implicit val dec: Decoder[IdDerive] = deriveUnderlyingDecoder[IdDerive]
+  }
 
   "Encoders" - {
     "resolves manually defined" in {
@@ -27,7 +30,7 @@ class SemiAutoTest extends FreeSpec with Matchers with TypeCheckedTripleEquals {
     }
 
     "resolves semi-automatic" in {
-      val enc = deriveUnderlyingEncoder[IdDerive]
+      val enc = implicitly[Encoder[IdDerive]]
       enc(IdDerive(1)) should ===(Json.fromInt(1))
     }
   }
@@ -39,7 +42,7 @@ class SemiAutoTest extends FreeSpec with Matchers with TypeCheckedTripleEquals {
     }
 
     "resolves semi-automatic" in {
-      implicit val dec: Decoder[IdDerive] = deriveUnderlyingDecoder[IdDerive]
+      val dec = implicitly[Decoder[IdDerive]]
       Json.fromInt(1).as[IdDerive] should ===(Right(IdDerive(1)))
     }
   }
