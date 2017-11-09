@@ -7,7 +7,8 @@ lazy val commonSettings = Seq(
     "org.scalatest" %% "scalatest" % "3.0.4" % "test"
   ),
   licenses := Seq("MIT" -> url("https://opensource.org/licenses/MIT" )),
-  resolvers += Resolver.jcenterRepo
+  resolvers += Resolver.jcenterRepo,
+  releaseCrossBuild := true
 )
 
 val circeVersion = "0.9.0-M1"
@@ -49,3 +50,4 @@ lazy val circe =
     .dependsOn(core)
     .enablePlugins(TutPlugin)
 
+lazy val root = (project in file(".")).aggregate(core, circe)

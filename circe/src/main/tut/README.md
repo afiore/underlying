@@ -32,8 +32,8 @@ You can install underlying by adding the following to your `build.sbt` file:
 resolvers += Resolver.bintrayRepo("afiore","maven")
 
 libraryDependencies += Seq(
-  "com.github.afiore" %% "underlying-core" % "0.1.2",
-  "com.github.afiore" %% "underlying-circe" % "0.1.2"
+  "com.github.afiore" %% "underlying-core" % "0.1.3",
+  "com.github.afiore" %% "underlying-circe" % "0.1.3"
 )
 ```
 
