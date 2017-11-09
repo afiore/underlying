@@ -1,6 +1,5 @@
 lazy val commonSettings = Seq(
   organization := "com.github.afiore",
-  version := "0.1.0",
   scalaVersion := "2.12.3",
   crossScalaVersions := Seq("2.11.11","2.12.3"),
   libraryDependencies ++= Seq(
@@ -11,7 +10,7 @@ lazy val commonSettings = Seq(
   resolvers += Resolver.jcenterRepo
 )
 
-val circeVersion = "0.9.0-M2"
+val circeVersion = "0.9.0-M1"
 
 val readme     = "README.md"
 val readmePath = file(".") / readme
@@ -32,7 +31,7 @@ lazy val circe =
       libraryDependencies ++= Seq(
         "io.circe" %% "circe-core" % circeVersion,
         "io.circe" %% "circe-generic" % circeVersion
-),
+      ),
       copyReadme := {
         val _      = (tut in Compile).value
         val tutDir = (tutTargetDirectory).value
