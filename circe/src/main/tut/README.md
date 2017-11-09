@@ -4,25 +4,44 @@ A simple mechanism to abstract over the serialisation of "newtypes" in scala.
 
 ## Rationale
 
-Wrapping primitive types into a single field case classes is a popular idiom 
-in Scala. This helps preventing bugs where multiple arguments
-of the same type are supplied in the wrong order, with the additional benefit of
-making our code expressive and self-documenting.
+Wrapping primitive types into a single field case classes - elsewhere known as [newtypes](https://wiki.haskell.org/Newtype) -
+is a popular idiom in Scala. This helps preventing bugs where multiple arguments
+of the same type are supplied in the wrong order, with the added benefit of
+making our code a bit more expressive and self-explanatory.
 
-However, one side effect of adopting such idiom is a certain increase in boilerplate,
-especially around serialisation/deserialisation logic.
+However, with such benefit comes some extra boilerplate, especially around 
+serialisation/deserialisation logic.
 
 ```tut:silent
 import io.circe.{Encoder, Decoder, Json}
-
 case class Id(value: String)
 case class Document(id: Id, title: String)
 
-implicit val idEncoder = Encoder.instance[Id](id => Json.fromString(id.value))
-implicit val idDecoder = Decoder.instance[Id](c => c.as[String].map(Id(_)))
-
-// docEncoder, docDecoder definitions ...
+implicit val idEnc: Encoder[Id] = Encoder.instance[Id](id => Json.fromString(id.value))
+implicit val idDec: Decoder[Id] = Decoder.instance[Id](c => c.as[String].map(Id(_)))
 ```
+
+Circe, our goto JSON library, in fact does not have a way to safely distinguish a
+new type from a case class with one single field, hence it serialises our `Id` as 
+follows:
+
+```tut:invisible
+import io.circe.{Encoder, Decoder, Json}
+import io.circe.syntax._
+
+case class Id(value: String)
+case class Document(id: Id, title: String)
+```
+```tut
+import io.circe.generic.semiauto._
+implicit val idEnc: Encoder[Id] = deriveEncoder[Id]
+implicit val docDec: Encoder[Document] = deriveEncoder[Document]
+
+val doc = Document(Id("xyz18a"),"Some doc")
+doc.asJson 
+```
+
+Most of the times, this is not what we want!
 
 ## Usage
 
@@ -79,27 +98,23 @@ import io.circe.generic.semiauto._
 import underlying.circe.semiauto._
 
 case class Id(value: String)
-case class Version(toInt: Int)
-object Version {
-  implicit val versionEnc = deriveUnderlyingEncoder[Version]
-  implicit val versionDec = implicitly[Decoder[Int]].flatMap { v =>
-    Decoder.instance[Version] { hc =>
-      if (v > 0) Right(Version(v))
-      else Left(DecodingFailure("Version must be positive", hc.history))
+object Id {
+  implicit val idEnc: Encoder[Id] = deriveUnderlyingEncoder[Id]
+  implicit val idDec: Decoder[Id] = implicitly[Decoder[Int]].flatMap { intId =>
+    Decoder.instance[Id] { c =>
+      if (intId > 0) Right(Id(intId.toString))
+      else  Left(DecodingFailure("Version must be positive", c.history))
     }
   }
 }
 
-object Id {
-  implicit val idEnc = deriveUnderlyingEncoder[Id]
-  implicit val idDec = deriveUnderlyingDecoder[Id]
-}
+case class Document(id: Id, title: String)
 
-case class Document(id: Id, version: Version, title: String)
-
-implicit val documentEncoder: Encoder[Document] = deriveEncoder
+implicit val documentEnc: Encoder[Document] = deriveEncoder
+implicit val documentDec: Decoder[Document] = deriveDecoder
 ```
 
-While forcing the user to manually define implicits using `deriveUnderlyingEncoder`,
-and `deriveUnderlyingDecoder`, the semi automatic mechanism allows for a higher
-degree of control over implicits whereby newtypes can be either implemented or derived.
+At the cost of forcing us to define an implicit val for each encoder/decoder instance,
+the semi-automatic derivation provides a higher degree of control than the fully automatic one.
+This is handy in situations where we want to automatically derive some instances while manually define others
+(in the example above, we perform some basic validation within the `Decoder[Id]` instance).
