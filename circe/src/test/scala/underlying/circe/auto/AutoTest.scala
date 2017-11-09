@@ -8,12 +8,11 @@ import shapeless.test.illTyped
 class AutoTest extends FreeSpec with TypeCheckedTripleEquals with Matchers {
   "circe generics" - {
     case class Id(value: String)
-    case class OtherId(toInt: Int)
-
     object OtherId {
       implicit val otherIdEnc: Encoder[OtherId] =
         Encoder.instance(id => Json.fromString(s"other-id:$id"))
     }
+    case class OtherId(toInt: Int)
 
     case class TwoFields(a: Char, b: Int)
 
@@ -85,7 +84,7 @@ class AutoTest extends FreeSpec with TypeCheckedTripleEquals with Matchers {
           obj(
             "heading" -> fromString("section 2"),
             "body"    -> fromString("blurb 2")
-          ),
+          )
         )
       )
 
