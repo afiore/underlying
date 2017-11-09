@@ -103,7 +103,7 @@ object Id {
   implicit val idDec: Decoder[Id] = implicitly[Decoder[Int]].flatMap { intId =>
     Decoder.instance[Id] { c =>
       if (intId > 0) Right(Id(intId.toString))
-      else  Left(DecodingFailure("Version must be positive", c.history))
+      else Left(DecodingFailure("Id must be positive", c.history))
     }
   }
 }

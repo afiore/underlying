@@ -32,10 +32,10 @@ scala> import io.circe.generic.semiauto._
 import io.circe.generic.semiauto._
 
 scala> implicit val idEnc: Encoder[Id] = deriveEncoder[Id]
-idEnc: io.circe.Encoder[Id] = io.circe.generic.encoding.DerivedObjectEncoder$$anon$1@b5a102b
+idEnc: io.circe.Encoder[Id] = io.circe.generic.encoding.DerivedObjectEncoder$$anon$1@a3fe12b
 
 scala> implicit val docDec: Encoder[Document] = deriveEncoder[Document]
-docDec: io.circe.Encoder[Document] = io.circe.generic.encoding.DerivedObjectEncoder$$anon$1@eaa56ce
+docDec: io.circe.Encoder[Document] = io.circe.generic.encoding.DerivedObjectEncoder$$anon$1@563e4783
 
 scala> val doc = Document(Id("xyz18a"),"Some doc")
 doc: Document = Document(Id(xyz18a),Some doc)
@@ -121,7 +121,7 @@ object Id {
   implicit val idDec: Decoder[Id] = implicitly[Decoder[Int]].flatMap { intId =>
     Decoder.instance[Id] { c =>
       if (intId > 0) Right(Id(intId.toString))
-      else  Left(DecodingFailure("Version must be positive", c.history))
+      else Left(DecodingFailure("Id must be positive", c.history))
     }
   }
 }
