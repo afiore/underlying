@@ -5,6 +5,8 @@ import org.scalactic.TypeCheckedTripleEquals
 import org.scalatest.{FreeSpec, Matchers}
 import shapeless.test.illTyped
 
+import io.circe.generic.semiauto.deriveDecoder
+
 class AutoTest extends FreeSpec with TypeCheckedTripleEquals with Matchers {
   "circe generics" - {
     case class Id(value: String)
@@ -36,6 +38,7 @@ class AutoTest extends FreeSpec with TypeCheckedTripleEquals with Matchers {
 
   "io.circe.generic.semiauto integration" - {
     import io.circe.generic.semiauto._
+    import io.circe.syntax._
     import Json._
 
     object Document {
@@ -62,6 +65,13 @@ class AutoTest extends FreeSpec with TypeCheckedTripleEquals with Matchers {
                         title: String,
                         sections: List[Section])
 
+    //One fields ADTs
+    sealed trait DocumentWithStatus {
+      def document: Document
+    }
+    case class Draft(document: Document)     extends DocumentWithStatus
+    case class Published(document: Document) extends DocumentWithStatus
+
     val doc =
       Document(Id("x"),
                Version(1),
@@ -70,6 +80,8 @@ class AutoTest extends FreeSpec with TypeCheckedTripleEquals with Matchers {
                  Section("section 1", MarkdownBody("blurb 1")),
                  Section("section 2", MarkdownBody("blurb 2"))
                ))
+
+    val draftDoc = Draft(doc)
 
     val jsonDoc =
       obj(
@@ -88,12 +100,17 @@ class AutoTest extends FreeSpec with TypeCheckedTripleEquals with Matchers {
         )
       )
 
-    "encode/decode round-trip" in {
-      import Document._
-      import io.circe.syntax._
+    val jsonDraftDoc = obj(
+      "Draft" -> jsonDoc
+    )
 
+    "encode/decode round-trip" in {
       doc.asJson should ===(jsonDoc)
       jsonDoc.as[Document] should ===(Right(doc))
+    }
+
+    "distinguishes one field ADTs from case classes" in {
+      draftDoc.asJson should ===(jsonDraftDoc)
     }
   }
 }
