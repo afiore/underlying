@@ -28,15 +28,11 @@ follows:
 
 
 ```scala
-scala> import io.circe.generic.semiauto._
 import io.circe.generic.semiauto._
-
-scala> implicit val idEnc: Encoder[Id] = deriveEncoder[Id]
-idEnc: io.circe.Encoder[Id] = io.circe.generic.encoding.DerivedObjectEncoder$$anon$1@a3fe12b
-
-scala> implicit val docDec: Encoder[Document] = deriveEncoder[Document]
-docDec: io.circe.Encoder[Document] = io.circe.generic.encoding.DerivedObjectEncoder$$anon$1@563e4783
-
+implicit val idEnc: Encoder[Id] = deriveEncoder[Id]
+implicit val docDec: Encoder[Document] = deriveEncoder[Document]
+```
+```scala
 scala> val doc = Document(Id("xyz18a"),"Some doc")
 doc: Document = Document(Id(xyz18a),Some doc)
 
@@ -60,8 +56,8 @@ You can install underlying by adding the following to your `build.sbt` file:
 resolvers += Resolver.bintrayRepo("afiore","maven")
 
 libraryDependencies += Seq(
-  "com.github.afiore" %% "underlying-core" % "0.1.3",
-  "com.github.afiore" %% "underlying-circe" % "0.1.3"
+  "com.github.afiore" %% "underlying-core" % "0.1.4",
+  "com.github.afiore" %% "underlying-circe" % "0.1.4"
 )
 ```
 
@@ -73,6 +69,7 @@ Underlying provides a mechanism to get rid of some of this boilerplate:
 import io.circe.{Encoder, Decoder, Json}
 import io.circe.syntax._
 import io.circe.generic.semiauto._
+import underlying.generic.HasBaseTrait
 import underlying.circe.auto._
 
 case class Id(value: String)
