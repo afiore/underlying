@@ -4,8 +4,8 @@ import io.circe.{Decoder, Encoder, Json}
 import org.scalactic.TypeCheckedTripleEquals
 import org.scalatest.{FreeSpec, Matchers}
 import shapeless.test.illTyped
-
 import io.circe.generic.semiauto.deriveDecoder
+import underlying.generic.HasBaseTrait
 
 class AutoTest extends FreeSpec with TypeCheckedTripleEquals with Matchers {
   "circe generics" - {
@@ -16,23 +16,33 @@ class AutoTest extends FreeSpec with TypeCheckedTripleEquals with Matchers {
     }
     case class OtherId(toInt: Int)
 
+    sealed trait X
+    case class ExtendsX(a: Int) extends X
+
     case class TwoFields(a: Char, b: Int)
 
-    "auto-derive Encoder" in {
+    "auto-derives Encoder" in {
       val enc = implicitly[Encoder[Id]]
       enc(Id("some-id")) should ===(Json.fromString("some-id"))
     }
-    "auto-derive Decoder" in {
+    "auto-derives Decoder" in {
       Json.fromString("some-id").as[Id] should ===(Right(Id("some-id")))
-    }
-    "discards companion object implicits!" in {
-      implicitly[Encoder[OtherId]] should !==(OtherId.otherIdEnc)
     }
     "does not derive Encoder for classes with more than one field" in {
       illTyped { "implicitly[Encoder[TwoFields]]" }
     }
+    "does not derive Encoder for classes that extend a sealed trait" in {
+      illTyped { "implicitly[Encoder[ExtendX]]" }
+    }
+
     "does not derive Decoder for classes with more than one field" in {
       illTyped { "implicitly[Decoder[TwoField]]" }
+    }
+    "does not derive Decoder for classes that extend a sealed trait" in {
+      illTyped { "implicitly[Decoder[ExtendsX]]" }
+    }
+    "discards companion object implicits!" in {
+      implicitly[Encoder[OtherId]] should !==(OtherId.otherIdEnc)
     }
   }
 
@@ -65,12 +75,20 @@ class AutoTest extends FreeSpec with TypeCheckedTripleEquals with Matchers {
                         title: String,
                         sections: List[Section])
 
-    //One fields ADTs
+    //One fields ADTs: shouldn't be treated as newtypes
     sealed trait DocumentWithStatus {
       def document: Document
     }
-    case class Draft(document: Document)     extends DocumentWithStatus
-    case class Published(document: Document) extends DocumentWithStatus
+    object DocumentWithStatus {
+      case class Draft(document: Document)     extends DocumentWithStatus
+      case class Published(document: Document) extends DocumentWithStatus
+
+      implicit val docWithStatusEnc: Encoder[DocumentWithStatus] =
+        deriveEncoder[DocumentWithStatus]
+
+      implicit val docWithStatusDec: Decoder[DocumentWithStatus] =
+        deriveDecoder[DocumentWithStatus]
+    }
 
     val doc =
       Document(Id("x"),
@@ -81,7 +99,7 @@ class AutoTest extends FreeSpec with TypeCheckedTripleEquals with Matchers {
                  Section("section 2", MarkdownBody("blurb 2"))
                ))
 
-    val draftDoc = Draft(doc)
+    val draftDoc: DocumentWithStatus = DocumentWithStatus.Draft(doc)
 
     val jsonDoc =
       obj(
@@ -101,7 +119,9 @@ class AutoTest extends FreeSpec with TypeCheckedTripleEquals with Matchers {
       )
 
     val jsonDraftDoc = obj(
-      "Draft" -> jsonDoc
+      "Draft" -> obj(
+        "document" -> jsonDoc
+      )
     )
 
     "encode/decode round-trip" in {
@@ -111,6 +131,7 @@ class AutoTest extends FreeSpec with TypeCheckedTripleEquals with Matchers {
 
     "distinguishes one field ADTs from case classes" in {
       draftDoc.asJson should ===(jsonDraftDoc)
+      jsonDraftDoc.as[DocumentWithStatus] should ===(Right(draftDoc))
     }
   }
 }

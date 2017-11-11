@@ -5,6 +5,7 @@ import org.scalactic.TypeCheckedTripleEquals
 import org.scalatest.{FreeSpec, Matchers}
 import underlying.circe.semiauto._
 import shapeless.test.illTyped
+import underlying.generic.HasBaseTrait
 
 class SemiAutoTest extends FreeSpec with Matchers with TypeCheckedTripleEquals {
   case class Id(value: String)
@@ -19,12 +20,18 @@ class SemiAutoTest extends FreeSpec with Matchers with TypeCheckedTripleEquals {
   }
 
   case class IdDerive(value: Int)
+
   object IdDerive {
-    implicit val enc: Encoder[IdDerive] = deriveUnderlyingEncoder[IdDerive]
-    implicit val dec: Decoder[IdDerive] = deriveUnderlyingDecoder[IdDerive]
+    implicit val idDeriveEnc: Encoder[IdDerive] =
+      deriveUnderlyingEncoder[IdDerive]
+    implicit val idDeriveDec: Decoder[IdDerive] =
+      deriveUnderlyingDecoder[IdDerive]
   }
 
   case class OneTwo(one: Int, two: Int)
+
+  sealed trait X
+  case class ExtendsX(a: Int) extends X
 
   "Encoders" - {
     "resolves manually defined" in {
@@ -40,6 +47,9 @@ class SemiAutoTest extends FreeSpec with Matchers with TypeCheckedTripleEquals {
     "fails on multiple field case class" in {
       illTyped { "deriveUnderlyingEncoder[OneTwo]" }
     }
+    "fails on types extending a sealed base trait" in {
+      illTyped { "deriveUnderlyingEncoder[ExtendsX]" }
+    }
   }
 
   "Decoders" - {
@@ -54,6 +64,9 @@ class SemiAutoTest extends FreeSpec with Matchers with TypeCheckedTripleEquals {
     }
     "fails on multiple field case class" in {
       illTyped { "deriveUnderlyingDecoder[OneTwo]" }
+    }
+    "fails on types extending a sealed base trait" in {
+      illTyped { "deriveUnderlyingDecoder[ExtendsX]" }
     }
   }
 }

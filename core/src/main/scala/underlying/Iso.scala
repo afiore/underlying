@@ -2,9 +2,11 @@ package underlying
 
 import scala.annotation.implicitNotFound
 import shapeless._
+import underlying.generic.HasBaseTrait
 
 @implicitNotFound(
-  msg = "Cannot derive an Iso for ${T} and ${U}: ${T} has more than one field")
+  msg =
+    "Cannot derive an Iso for ${T} and ${U}: ${T} has either more than one field or it extends a sealed trait")
 trait Iso[T, U] {
   def underlying(t: T): U
   def apply(s: U): T
@@ -20,7 +22,8 @@ object Iso extends {
       implicit
       aGen: Generic.Aux[A, L],
       isCons: ops.hlist.IsHCons.Aux[L, H, HNil],
-      selectAll: ops.hlist.SelectAll[H :: HNil, L]): Iso[A, H] =
+      selectAll: ops.hlist.SelectAll[H :: HNil, L]): Iso[A, H] = {
     Iso.instance[A, H](s => aGen.from(selectAll(s :: HNil)))(a =>
       aGen.to(a).head)
+  }
 }

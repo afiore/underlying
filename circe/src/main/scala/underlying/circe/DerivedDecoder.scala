@@ -4,6 +4,7 @@ import io.circe.{Decoder, HCursor}
 import shapeless._
 import ops.hlist.IsHCons
 import underlying.Iso
+import underlying.generic.HasBaseTrait
 
 import scala.annotation.implicitNotFound
 @implicitNotFound(
@@ -19,6 +20,7 @@ object DerivedDecoder {
   implicit def genericUnderlyingDecoder[A, L <: HList, H](
       implicit
       aGen: Generic.Aux[A, L],
+      extendsNoSealedTrait: HasBaseTrait.NotFound[A],
       isHCons: IsHCons.Aux[L, H, HNil],
       iso: Lazy[Iso[A, H]],
       hDec: Lazy[Decoder[H]]): DerivedDecoder[A] =
