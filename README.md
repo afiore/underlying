@@ -1,6 +1,6 @@
 # Underlying
 
-A simple mechanism to abstract over the serialisation of "newtypes" in scala.
+Boilerplate-free newtype serialisation
 
 ## Rationale
 
@@ -50,16 +50,19 @@ Most of the times, this is not what we want!
 
 ## Usage
 
-You can install underlying by adding the following to your `build.sbt` file:
+You can install _underlying_ by adding the following to your `build.sbt` file:
 
 ```scala
 resolvers += Resolver.bintrayRepo("afiore","maven")
 
 libraryDependencies += Seq(
-  "com.github.afiore" %% "underlying-core" % "0.1.4",
-  "com.github.afiore" %% "underlying-circe" % "0.1.4"
+  "com.github.afiore" %% "underlying-core" % "0.1.5",
+  "com.github.afiore" %% "underlying-circe" % "0.1.5"
 )
 ```
+
+*Warning:* this library is an experiment and its usage in a production environment
+is not encouraged. 
 
 ### Automatic derivation
 
@@ -69,7 +72,6 @@ Underlying provides a mechanism to get rid of some of this boilerplate:
 import io.circe.{Encoder, Decoder, Json}
 import io.circe.syntax._
 import io.circe.generic.semiauto._
-import underlying.generic.HasBaseTrait
 import underlying.circe.auto._
 
 case class Id(value: String)
@@ -96,6 +98,42 @@ res4: io.circe.Json =
 
 scala> doc.asJson.as[Document]
 res5: io.circe.Decoder.Result[Document] = Right(Document(Id(xyz18a),Some doc))
+```
+
+The automatic derivation is intended to not interfere too much with Circe's built-in
+derivation mechanism. For instance, it will not handle as newtypes classes that extend
+a sealed trait, even if these classes have only one field.
+
+```scala
+
+sealed trait DocumentWorkflow
+
+case class Draft(document: Document) extends DocumentWorkflow
+case class Published(document: Document) extends DocumentWorkflow
+
+implicit val docWorkflowEnc: Encoder[DocumentWorkflow] = deriveEncoder[DocumentWorkflow]
+implicit val docWorkflowDec: Decoder[DocumentWorkflow] = deriveDecoder[DocumentWorkflow]
+
+val draftDoc: DocumentWorkflow = Draft(Document(Id("xyz"), "draft doc"))
+```
+
+The JSON representation of `draftDoc` will in fact be the default one produced by circe's
+automatic derivation:
+
+```scala
+scala> val json = draftDoc.asJson
+json: io.circe.Json =
+{
+  "Draft" : {
+    "document" : {
+      "id" : "xyz",
+      "title" : "draft doc"
+    }
+  }
+}
+
+scala> json.as[DocumentWorkflow]
+res10: io.circe.Decoder.Result[DocumentWorkflow] = Right(Draft(Document(Id(xyz),draft doc)))
 ```
 
 ### Semi-automatic derivation
