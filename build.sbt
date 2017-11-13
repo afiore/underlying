@@ -1,4 +1,3 @@
-
 lazy val coreDeps = Seq(
  libraryDependencies ++= Seq(
     "com.chuusai" %% "shapeless" % "2.3.2",
@@ -13,6 +12,7 @@ lazy val basicSetting = Seq(
   resolvers += Resolver.jcenterRepo,
   releaseCrossBuild := true
 )
+
 lazy val commonSettings = basicSetting ++ coreDeps
 
 val circeVersion = "0.9.0-M1"
@@ -57,5 +57,3 @@ lazy val circe =
     )
     .dependsOn(core)
     .enablePlugins(TutPlugin)
-
-lazy val root = (project in file(".")).aggregate(core, circe)

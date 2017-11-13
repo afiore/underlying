@@ -2,7 +2,6 @@ package underlying.generic
 
 import org.scalactic.TypeCheckedTripleEquals
 import org.scalatest.{FreeSpec, Matchers}
-import shapeless.test.illTyped
 
 class IsoDerivationTest
     extends FreeSpec
@@ -10,14 +9,19 @@ class IsoDerivationTest
     with TypeCheckedTripleEquals {
 
   "generic Iso" - {
-    case class Id(value: String)
-    case class TwoFields(a: Char, b: Int)
+    case class Id(value: String) extends underlying.NewType[String]
+    case class OneField(a: Char)
 
     "derive Iso" in {
       val idIso = implicitly[underlying.Iso[Id, String]]
       idIso("x") should ===(Id("x"))
       idIso.underlying(Id("x")) should ===("x")
     }
-  }
 
+    "doesn't derive iso for non-newtypes" in {
+      shapeless.test.illTyped {
+        """implicitly[Underlying.Iso[OneField, Char]]"""
+      }
+    }
+  }
 }

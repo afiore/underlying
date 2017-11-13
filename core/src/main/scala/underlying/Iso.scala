@@ -2,7 +2,6 @@ package underlying
 
 import scala.annotation.implicitNotFound
 import shapeless._
-import underlying.generic.HasBaseTrait
 
 @implicitNotFound(
   msg =
@@ -18,7 +17,7 @@ object Iso extends {
     override def apply(s: U): T      = from(s)
   }
 
-  implicit def genericIso[A, L <: HList, H](
+  implicit def genericIso[A <: NewType[_], L <: HList, H](
       implicit
       aGen: Generic.Aux[A, L],
       isCons: ops.hlist.IsHCons.Aux[L, H, HNil],

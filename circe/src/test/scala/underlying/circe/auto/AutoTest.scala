@@ -4,17 +4,18 @@ import io.circe.{Decoder, Encoder, Json}
 import org.scalactic.TypeCheckedTripleEquals
 import org.scalatest.{FreeSpec, Matchers}
 import shapeless.test.illTyped
+import underlying.NewType
 import io.circe.generic.semiauto.deriveDecoder
-import underlying.generic.HasBaseTrait
 
 class AutoTest extends FreeSpec with TypeCheckedTripleEquals with Matchers {
   "circe generics" - {
-    case class Id(value: String)
+
+    case class Id(value: String) extends NewType[String]
     object OtherId {
       implicit val otherIdEnc: Encoder[OtherId] =
         Encoder.instance(id => Json.fromString(s"other-id:$id"))
     }
-    case class OtherId(toInt: Int)
+    case class OtherId(value: Int) extends NewType[Int]
 
     sealed trait X
     case class ExtendsX(a: Int) extends X
@@ -52,9 +53,9 @@ class AutoTest extends FreeSpec with TypeCheckedTripleEquals with Matchers {
     import Json._
 
     object Document {
-      case class Id(value: String)
-      case class Version(toInt: Int)
-      case class MarkdownBody(value: String)
+      case class Id(value: String)           extends NewType[String]
+      case class Version(value: Int)         extends NewType[Int]
+      case class MarkdownBody(value: String) extends NewType[String]
       case class Section(heading: String, body: MarkdownBody)
 
       implicit val docEnc: Encoder[Document] =
@@ -68,14 +69,14 @@ class AutoTest extends FreeSpec with TypeCheckedTripleEquals with Matchers {
         implicit val sectionDec: Decoder[Section] = deriveDecoder[Section]
       }
     }
-
+//
     import Document._
     case class Document(id: Id,
                         version: Version,
                         title: String,
                         sections: List[Section])
 
-    //One fields ADTs: shouldn't be treated as newtypes
+    // One fields ADTs: shouldn't be treated as newtypes
     sealed trait DocumentWithStatus {
       def document: Document
     }
@@ -89,7 +90,7 @@ class AutoTest extends FreeSpec with TypeCheckedTripleEquals with Matchers {
       implicit val docWithStatusDec: Decoder[DocumentWithStatus] =
         deriveDecoder[DocumentWithStatus]
     }
-
+//
     val doc =
       Document(Id("x"),
                Version(1),

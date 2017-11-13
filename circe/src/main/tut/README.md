@@ -58,7 +58,7 @@ libraryDependencies += Seq(
 ```
 
 *Warning:* this library is an experiment and its usage in a production environment
-is not encouraged. 
+is not encouraged! 
 
 ### Automatic derivation
 
@@ -70,7 +70,7 @@ import io.circe.syntax._
 import io.circe.generic.semiauto._
 import underlying.circe.auto._
 
-case class Id(value: String)
+case class Id(value: String) extends underlying.NewType[String]
 case class Document(id: Id, title: String)
 
 implicit val documentEncoder: Encoder[Document] = deriveEncoder
@@ -111,39 +111,3 @@ automatic derivation:
 val json = draftDoc.asJson
 json.as[DocumentWorkflow]
 ```
-
-### Semi-automatic derivation
-
-Automatic derivation works fine as long as all your newtypes behave as illustrated. 
-However, keep in mind that, because of scala [implicit resolution rules](https://docs.scala-lang.org/tutorials/FAQ/finding-implicits.html),
-the implicits in `underlying.circe.auto` will take priority over the ones you define in companion objects.
-As an alternative to the fully automatic mechanism, the library also provides a semi automatic one
-whereby encoders/decoders are derived explicitly:
-
-```scala
-import io.circe.{Encoder, Decoder, DecodingFailure, Json}
-import io.circe.syntax._
-import io.circe.generic.semiauto._
-import underlying.circe.semiauto._
-
-case class Id(value: String)
-object Id {
-  implicit val idEnc: Encoder[Id] = deriveUnderlyingEncoder[Id]
-  implicit val idDec: Decoder[Id] = implicitly[Decoder[Int]].flatMap { intId =>
-    Decoder.instance[Id] { c =>
-      if (intId > 0) Right(Id(intId.toString))
-      else Left(DecodingFailure("Id must be positive", c.history))
-    }
-  }
-}
-
-case class Document(id: Id, title: String)
-
-implicit val documentEnc: Encoder[Document] = deriveEncoder
-implicit val documentDec: Decoder[Document] = deriveDecoder
-```
-
-At the cost of forcing us to define an implicit val for each encoder/decoder instance,
-the semi-automatic derivation provides a higher degree of control than the fully automatic one.
-This is handy in situations where we want to automatically derive some instances while manually define others
-(in the example above, we perform some basic validation within the `Decoder[Id]` instance).
