@@ -21,8 +21,8 @@ implicit val idEnc: Encoder[Id] = Encoder.instance[Id](id => Json.fromString(id.
 implicit val idDec: Decoder[Id] = Decoder.instance[Id](c => c.as[String].map(Id(_)))
 ```
 
-Circe, our goto JSON library, in fact does not have a way to safely distinguish a
-new type from a case class with one single field, hence it serialises our `Id` as 
+Circe, as well as most JSON libraries written in Scala, in fact does not have a way to safely distinguish a
+new type from a case class with one single field, hence it serialises `Id` as 
 follows:
 
 ```tut:invisible
@@ -77,9 +77,10 @@ implicit val documentEncoder: Encoder[Document] = deriveEncoder
 implicit val documentDecoder: Decoder[Document] = deriveDecoder
 ```
 
-By importing `underlying.circe.auto._` the compiler will automatically derive an
-encoder/decoder for `Document.Id`, automating the same trivial unwrapping and wrapping
-logic implemented above.
+By extending `underlying.NewType[String]` and importing `underlying.circe.auto._`, 
+we can now leverage the compiler to automatically derive an encoder/decoder for 
+`Document.Id`, automating the same trivial unwrapping and wrapping logic implemented 
+above.
 
 ```tut
 val doc = Document(Id("xyz18a"),"Some doc")
@@ -87,9 +88,9 @@ doc.asJson
 doc.asJson.as[Document]
 ```
 
-The automatic derivation is intended to not interfere too much with Circe's built-in
-derivation mechanism. For instance, it will not handle as newtypes classes that extend
-a sealed trait, even if these classes have only one field.
+The `underlying.NewType[A]` trait is intended as a way to explicitly distinguish 
+_newtypes_ from case classes with one single field. This allows the automatic derivation
+mechanism to not interfere with the default derivation mechanism provided by Circe.
 
 ```tut:silent
 
@@ -104,7 +105,7 @@ implicit val docWorkflowDec: Decoder[DocumentWorkflow] = deriveDecoder[DocumentW
 val draftDoc: DocumentWorkflow = Draft(Document(Id("xyz"), "draft doc"))
 ```
 
-The JSON representation of `draftDoc` will in fact be the default one produced by circe's
+The JSON representation of `draftDoc` is in fact the default one produced by circe's
 automatic derivation:
 
 ```tut
