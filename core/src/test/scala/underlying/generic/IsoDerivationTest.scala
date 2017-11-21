@@ -3,13 +3,13 @@ package underlying.generic
 import org.scalactic.TypeCheckedTripleEquals
 import org.scalatest.{FreeSpec, Matchers}
 
+case class Id(value: String) extends AnyVal
 class IsoDerivationTest
     extends FreeSpec
     with Matchers
     with TypeCheckedTripleEquals {
 
   "generic Iso" - {
-    case class Id(value: String) extends underlying.NewType[String]
     case class OneField(a: Char)
 
     "derive Iso" in {

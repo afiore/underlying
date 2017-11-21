@@ -2,7 +2,7 @@
 
 Boilerplate-free newtype serialisation
 
-## Rationale
+## Introduction
 
 Wrapping primitive types into a single field case classes - elsewhere known as [newtypes](https://wiki.haskell.org/Newtype) -
 is a popular idiom in Scala. This helps preventing bugs where multiple arguments
@@ -56,13 +56,14 @@ You can install _underlying_ by adding the following to your `build.sbt` file:
 resolvers += Resolver.bintrayRepo("afiore","maven")
 
 libraryDependencies += Seq(
-  "com.github.afiore" %% "underlying-core" % "0.2.0",
-  "com.github.afiore" %% "underlying-circe" % "0.2.0"
+  "com.github.afiore" %% "underlying-core" % "0.2.1",
+  "com.github.afiore" %% "underlying-circe" % "0.2.1"
 )
 ```
 
 *Warning:* this library is an experiment and its usage in a production environment
-is not encouraged! 
+is not encouraged. Moreover, it might be superseded once [this pull request](https://github.com/circe/circe/issues/469) is merged
+in Circe
 
 ### Automatic derivation
 
@@ -74,17 +75,17 @@ import io.circe.syntax._
 import io.circe.generic.semiauto._
 import underlying.circe.auto._
 
-case class Id(value: String) extends underlying.NewType[String]
+case class Id(value: String) extends AnyVal
 case class Document(id: Id, title: String)
 
 implicit val documentEncoder: Encoder[Document] = deriveEncoder
 implicit val documentDecoder: Decoder[Document] = deriveDecoder
 ```
 
-By extending `underlying.NewType[String]` and importing `underlying.circe.auto._`, 
+By making `Id` a [value class](https://docs.scala-lang.org/overviews/core/value-classes.html) and importing `underlying.circe.auto._`, 
 we can now leverage the compiler to automatically derive an encoder/decoder for 
 `Document.Id`, automating the same trivial unwrapping and wrapping logic implemented 
-above.
+before.
 
 ```scala
 scala> val doc = Document(Id("xyz18a"),"Some doc")
@@ -101,9 +102,10 @@ scala> doc.asJson.as[Document]
 res5: io.circe.Decoder.Result[Document] = Right(Document(Id(xyz18a),Some doc))
 ```
 
-The `underlying.NewType[A]` trait is intended as a way to explicitly distinguish 
-_newtypes_ from case classes with one single field. This allows the automatic derivation
-mechanism to not interfere with the default derivation mechanism provided by Circe.
+Extending `AnyVal` will constrain our type to have only one private member, allowing 
+the compiler to avoid instantiating the class in some circumstances. At the same time,
+this will leave the user in full control to define where wrapping/unwrapping is desired,
+without interfering with the default behaviour of circe's automatic derivation.
 
 ```scala
 
@@ -118,8 +120,8 @@ implicit val docWorkflowDec: Decoder[DocumentWorkflow] = deriveDecoder[DocumentW
 val draftDoc: DocumentWorkflow = Draft(Document(Id("xyz"), "draft doc"))
 ```
 
-The JSON representation of `draftDoc` is in fact the default one produced by circe's
-automatic derivation:
+The JSON representation of `draftDoc` is in fact the default one Circe produces when
+derivation an `Encoder`/`Decoder` for a sealed trait hierarchy.
 
 ```scala
 scala> val json = draftDoc.asJson
@@ -136,3 +138,8 @@ json: io.circe.Json =
 scala> json.as[DocumentWorkflow]
 res10: io.circe.Decoder.Result[DocumentWorkflow] = Right(Draft(Document(Id(xyz),draft doc)))
 ```
+
+## Copyright and license
+
+Underlying is licensed under the [MIT License](https://opensource.org/licenses/MIT) (the “License”); you may not use this software except in compliance with the License.
+Unless required by applicable law or agreed to in writing, software distributed under the License is distributed on an “AS IS” BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the specific language governing permissions and limitations under the License.

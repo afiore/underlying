@@ -17,7 +17,7 @@ object Iso extends {
     override def apply(s: U): T      = from(s)
   }
 
-  implicit def genericIso[A <: NewType[_], L <: HList, H](
+  implicit def genericIso[A <: AnyVal, L <: HList, H](
       implicit
       aGen: Generic.Aux[A, L],
       isCons: ops.hlist.IsHCons.Aux[L, H, HNil],

@@ -4,22 +4,21 @@ import io.circe.{Decoder, Encoder, Json}
 import org.scalactic.TypeCheckedTripleEquals
 import org.scalatest.{FreeSpec, Matchers}
 import shapeless.test.illTyped
-import underlying.NewType
-import io.circe.generic.semiauto.deriveDecoder
 
+case class Id(value: String)           extends AnyVal
+case class OtherId(value: Int)         extends AnyVal
+case class Version(value: Int)         extends AnyVal
+case class MarkdownBody(value: String) extends AnyVal
+
+object OtherId {
+  implicit val otherIdEnc: Encoder[OtherId] =
+    Encoder.instance(id => Json.fromString(s"other-id:$id"))
+}
 class AutoTest extends FreeSpec with TypeCheckedTripleEquals with Matchers {
   "circe generics" - {
 
-    case class Id(value: String) extends NewType[String]
-    object OtherId {
-      implicit val otherIdEnc: Encoder[OtherId] =
-        Encoder.instance(id => Json.fromString(s"other-id:$id"))
-    }
-    case class OtherId(value: Int) extends NewType[Int]
-
     sealed trait X
     case class ExtendsX(a: Int) extends X
-
     case class TwoFields(a: Char, b: Int)
 
     "auto-derives Encoder" in {
@@ -53,17 +52,13 @@ class AutoTest extends FreeSpec with TypeCheckedTripleEquals with Matchers {
     import Json._
 
     object Document {
-      case class Id(value: String)           extends NewType[String]
-      case class Version(value: Int)         extends NewType[Int]
-      case class MarkdownBody(value: String) extends NewType[String]
-      case class Section(heading: String, body: MarkdownBody)
-
       implicit val docEnc: Encoder[Document] =
         deriveEncoder[Document]
 
       implicit val docDec: Decoder[Document] =
         deriveDecoder[Document]
 
+      case class Section(heading: String, body: MarkdownBody)
       object Section {
         implicit val sectionEnc: Encoder[Section] = deriveEncoder[Section]
         implicit val sectionDec: Decoder[Section] = deriveDecoder[Section]

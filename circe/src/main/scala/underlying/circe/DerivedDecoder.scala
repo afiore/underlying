@@ -15,9 +15,7 @@ object DerivedDecoder {
       override def apply(c: HCursor): Decoder.Result[A] = f(c)
     }
 
-  implicit def genericUnderlyingDecoder[H,
-                                        A <: underlying.NewType[H],
-                                        L <: HList](
+  implicit def genericUnderlyingDecoder[H, A <: AnyVal, L <: HList](
       implicit
       aGen: Generic.Aux[A, L],
       iso: Lazy[Iso[A, H]],

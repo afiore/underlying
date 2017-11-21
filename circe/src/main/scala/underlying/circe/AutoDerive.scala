@@ -5,9 +5,7 @@ import shapeless._
 import underlying.Iso
 
 trait AutoDerive {
-  implicit def genericUnderlyingEncoder[H,
-                                        A <: underlying.NewType[H],
-                                        L <: HList](
+  implicit def genericUnderlyingEncoder[H, A <: AnyVal, L <: HList](
       implicit
       aGen: Generic.Aux[A, L],
       isHCons: ops.hlist.IsHCons.Aux[L, H, HNil],
@@ -15,9 +13,7 @@ trait AutoDerive {
       hEnc: Lazy[Encoder[H]]): DerivedEncoder[A] =
     DerivedEncoder.genericUnderlyingEncoder[A, L, H]
 
-  implicit def genericUnderlyingDecoder[H,
-                                        A <: underlying.NewType[H],
-                                        L <: HList](
+  implicit def genericUnderlyingDecoder[H, A <: AnyVal, L <: HList](
       implicit
       aGen: Generic.Aux[A, L],
       isHCons: ops.hlist.IsHCons.Aux[L, H, HNil],

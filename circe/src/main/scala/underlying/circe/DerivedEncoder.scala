@@ -15,9 +15,7 @@ object DerivedEncoder {
     override def apply(a: A) = f(a)
   }
 
-  implicit def genericUnderlyingEncoder[A <: underlying.NewType[_],
-                                        L <: HList,
-                                        H](
+  implicit def genericUnderlyingEncoder[A <: AnyVal, L <: HList, H](
       implicit
       aGen: Generic.Aux[A, L],
       iso: Lazy[Iso[A, H]],
